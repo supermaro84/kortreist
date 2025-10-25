@@ -5,6 +5,7 @@ build/
 dist/
 wheels/
 *.egg-info
-
+cache/
+.iopynb_checkpoints/
 # Virtual environments
 .venv
