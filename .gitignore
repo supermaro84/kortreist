@@ -9,3 +9,4 @@ cache/
 .iopynb_checkpoints/
 # Virtual environments
 .venv
+.env
