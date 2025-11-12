@@ -22,6 +22,20 @@ def get_isochrone_time(x,y,time_minutes):
     )
     return iso
 
+def get_isochrone_distance(x,y,distance_meters):
+    coordinates=[x,y]
+    client = ors.Client(key=api_key)
+
+    iso = client.isochrones(
+        locations=[coordinates],
+        profile='driving-car',
+        range=[distance_meters],
+        range_type='distance',
+        validate=False,
+        attributes=['total_pop']
+    )
+    return iso
+
 def get_addresses_from_osm_for_isochrone(isochrone):
     coords=isochrone['features'][0]['geometry']['coordinates']
     list_of_tuples = [tuple(x) for x in coords[0]]
@@ -32,8 +46,7 @@ def get_addresses_from_osm_for_isochrone(isochrone):
     gdf = ox.features_from_polygon(polygon, tags)
     gdf_points = gdf[gdf.geom_type == "Point"]
     return gdf_points
-def gdf_to_geojson(gdf):
-    return gdf.__geo_interface__
+
 
 def subsample_addresses(address_gdf,sample_size):
     return address_gdf.sample(sample_size)

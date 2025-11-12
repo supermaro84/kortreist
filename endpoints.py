@@ -2,6 +2,10 @@ import dataclasses
 import geopandas as gpd
 import pandas as pd
 import requests
+import features 
+import utils
+from shapely import wkt
+
 
 
 def get_collections_geoserver(url, collections_endpoint) -> pd.DataFrame:
@@ -33,28 +37,13 @@ def get_features_by_attribute_value(geoserver: Geoserver, collection_name: str, 
     gdf = gpd.GeoDataFrame.from_features(data['features'])
     return gdf
 
-def get_features_by_polygon(geoserver: Geoserver, collection_name: str, polygon_wkt: str) -> gpd.GeoDataFrame:
-    response = requests.get(f"{geoserver.url}/{geoserver.collections_endpoint}/{collection_name}/items?filter=INTERSECTS(geometry, {polygon_wkt})")
+def get_features_by_polygon(geoserver: Geoserver, collection_name: str, wkt_geom) -> gpd.GeoDataFrame:
+    bbox=utils.polygon_bbox_from_wkt(wkt_geom)
+    response = requests.get(f"{geoserver.url}/{geoserver.collections_endpoint}/{collection_name}/items?bbox={bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}")
     response.raise_for_status()
     data = response.json()
     gdf = gpd.GeoDataFrame.from_features(data['features'])
+    wkt_geom_obj = wkt.loads(wkt_geom)
+    gdf = gdf[gdf.geometry.within(wkt_geom_obj)]
     return gdf
 
-def main():
-    geoserver = Geoserver(
-        url="https://geoserver-4vzmi.ondigitalocean.app/geoserver",
-        collections_endpoint="ogc/features/v1/collections")
-    adresses = "kortreist:addresser_leilighet"
-    tettsteder_aggr = "kortreist:tettsteder2025_aggr"
-    tettsteder = "kortreist:tettsteder2025"
-    tettsteder_centroids = "kortreist:tettsteder2025_centroids"
-    print("Fetching unique places...")
-    tettsteder_list=get_unique_values_from_geoserver_collection(geoserver, tettsteder_centroids, "tettstednavn")
-    tettsted_polygon_aggr=get_features_by_attribute_value(geoserver, tettsteder_aggr, "tettstednavn", tettsteder_list[0])
-    tettsted_polygon=get_features_by_attribute_value(geoserver, tettsteder, "tettstednavn", tettsteder_list[0])
-    tettsted_addresses=get_features_by_attribute_value(geoserver, adresses, "tettstednavn", tettsteder_list[0])
-    print(f"Number of addresses in {tettsteder_list[0]}: {len(tettsted_addresses)}")
-    print(tettsted_addresses.head())
-
-
-main()

@@ -6,7 +6,9 @@ dist/
 wheels/
 *.egg-info
 cache/
-.iopynb_checkpoints/
+.ipynb_checkpoints/
 # Virtual environments
 .venv
 .env
+# assets/
+*.pkl
